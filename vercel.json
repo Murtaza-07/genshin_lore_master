@@ -1,21 +1,31 @@
-{
-  "version": 2,
-  "builds": [
     {
-      "src": "api/main.py",
-      "use": "@vercel/python",
-      "config": { "maxLambdaSize": "15mb", "runtime": "python3.12" }
+      "version": 2,
+      "ignore": [
+        "data/",
+        "genshin_data/",
+        "*.db",
+        "*.webp",
+        "*.png",
+        "*.ttf",
+        "run_scrape.py"
+      ],
+      "builds": [
+        {
+          "src": "api/main.py",
+          "use": "@vercel/python",
+          "config": { "maxLambdaSize": "15mb", "runtime": "python3.12" }
+        }
+      ],
+      "routes": [
+        {
+          "src": "/static/(.*)",
+          "dest": "/static/$1"
+        },
+        {
+          "src": "/(.*)",
+          "dest": "api/main.py"
+        }
+      ],
+      "installCommand": "pip install -r requirements.txt"
     }
-  ],
-  "routes": [
-    {
-      "src": "/static/(.*)",
-      "dest": "/static/$1"
-    },
-    {
-      "src": "/(.*)",
-      "dest": "api/main.py"
-    }
-  ],
-  "installCommand": "pip install -r requirements.txt"
-}
+    
