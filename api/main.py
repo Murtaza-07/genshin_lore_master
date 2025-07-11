@@ -3,7 +3,6 @@
 Advanced Genshin Impact Lore System
 Multi-source scraper with semantic chunking, caching, web interface, and real-time updates
 """
-
 import asyncio
 import os
 import sqlite3
@@ -1375,4 +1374,3 @@ async def chat_with_lore(request: ChatRequest):
     except Exception as e:
         logger.error(f"Error during chat with LLM: {e}", exc_info=True)
         raise HTTPException(status_code=500, detail=f"Error processing chat request: {e}")
-
