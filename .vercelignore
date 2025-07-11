@@ -1,0 +1,7 @@
+data/
+genshin_data/
+*.db
+*.webp
+*.png
+*.ttf
+run_scrape.py
