@@ -1,0 +1,16 @@
+fastapi
+uvicorn[standard]
+python-dotenv
+sentence-transformers
+aiohttp
+redis
+praw
+yt-dlp
+schedule
+faiss-cpu
+numpy
+spacy
+nltk
+tiktoken
+google-generativeai
+beautifulsoup4
