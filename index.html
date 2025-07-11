@@ -1,0 +1,719 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Genshin Lore System</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600&display=swap" rel="stylesheet">
+    <!-- Include Marked.js for Markdown rendering -->
+    <script src="https://cdn.jsdelivr.net/npm/marked/marked.min.js"></script>
+    <!-- Genshin-themed Favicon (Star SVG) -->
+    <link rel="icon" type="image/svg+xml" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24'%3E%3Cpath fill='%23FACC15' d='M12 17.27L18.18 21l-1.64-7.03L22 9.24l-7.19-.61L12 2 9.19 8.63 2 9.24l5.46 4.73L5.82 21z'/%3E%3C/svg%3E">
+    <style>
+        /* Custom Font: Genshin Impact Style */
+        /* NOTE: Direct loading of local font files (like zhcn.ttf) is not supported in this environment. */
+        /* The browser cannot access local files. 'Inter' will be used as a fallback. */
+        /* For a production environment, you would need to host this font file online. */
+        @font-face {
+            font-family: 'GenshinFont';
+            /* Updated path to reflect zhcn.ttf being in the /static directory */
+            src: url('/static/zhcn.ttf') format('truetype');
+            font-weight: normal;
+            font-style: normal;
+        }
+
+        body {
+            font-family: 'GenshinFont', 'Inter', sans-serif; /* Use GenshinFont first, then Inter as fallback */
+            background-color: #F9F5F2; /* Fallback page background color */
+            color: #65635F; /* Default font color as requested */
+            min-height: 100vh;
+            display: flex;
+            flex-direction: column;
+            align-items: center; /* Centers children horizontally */
+            justify-content: flex-start;
+            padding: 0;
+            position: relative; /* Added for pseudo-element positioning */
+            overflow-x: hidden;
+
+            /* Custom Background: Genshin Impact Wallpaper */
+            background-image: url('https://genshindb.org/wp-content/uploads/2022/10/Aether-and-Lumine-Genshin-Impact-Official-Wallpapers.jpg');
+            background-size: cover;
+            background-position: center center;
+            background-attachment: fixed; /* Keeps background fixed when scrolling */
+            z-index: 0; /* Ensure body is behind the overlay */
+        }
+
+        /* Overlay for dimming the background image */
+        body::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            background-color: rgba(0, 0, 0, 0.4); /* Black overlay with 40% opacity */
+            z-index: 1; /* Place it above the background image */
+            pointer-events: none; /* Allow clicks to pass through the overlay */
+        }
+
+
+        /* Top Navigation Bar */
+        .top-bar {
+            background-color: #454E5D; /* Top bar color as requested */
+            color: white;
+            padding: 1rem 1.5rem;
+            width: 100%;
+            box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+            display: flex;
+            justify-content: space-between; /* Space out logo and title */
+            align-items: center;
+            flex-shrink: 0; /* Prevent shrinking */
+            z-index: 10; /* Ensure it's above other content */
+        }
+        /* Unbold the title text */
+        .top-bar h1 {
+            font-weight: normal; /* Changed from font-bold to normal */
+            flex-grow: 1; /* Allow title to take available space */
+            text-align: center; /* Center the title */
+            margin-left: -70px;
+            /* Removed margin-left: -50px; to allow true centering */
+        }
+        .top-bar .logo {
+            height: 50px; /* Adjust logo size */
+            width: auto;
+            margin-right: 1rem; /* Space between logo and title */
+        }
+
+
+        .container {
+            max-width: 1200px;
+            width: 100%;
+            margin: 0 auto; /* This centers the container horizontally */
+            padding: 1.5rem;
+            box-sizing: border-box;
+            z-index: 2; /* Ensure container is above the overlay */
+            display: flex;
+            flex-direction: column;
+            gap: 1.5rem;
+            flex-grow: 1; /* Allow container to grow and push footer down */
+        }
+
+        .card {
+            background-color: rgba(255, 255, 255, 0.85); /* White with 85% opacity for transparency */
+            border-radius: 0.75rem;
+            box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
+            padding: 2rem;
+            border: 1px solid rgba(224, 224, 224, 0.7); /* Slightly transparent border */
+            backdrop-filter: blur(5px); /* Optional: adds a subtle blur effect behind the card */
+        }
+
+        .btn {
+            padding: 0.75rem 1.5rem; /* Adjusted padding to accommodate inner elements */
+            border-radius: 9999px; /* Pill shape */
+            font-weight: 600;
+            transition: all 0.2s ease;
+            cursor: pointer;
+            text-transform: none;
+            letter-spacing: normal;
+            display: flex;
+            align-items: center;
+            justify-content: center; /* Centered content within the button */
+            position: relative;
+            overflow: hidden;
+            white-space: nowrap; /* Ensure text stays on one line */
+        }
+        .btn-primary {
+            background-color: #454E5D; /* Same as top bar color */
+            color: white;
+            box-shadow: 0 2px 6px rgba(0, 0, 0, 0.2), inset 0 2px 4px rgba(255, 255, 255, 0.1), inset 0 -2px 4px rgba(0, 0, 0, 0.2); /* Outer shadow + inner shadow for depth */
+            border: none;
+        }
+        .btn-primary:hover {
+            background-color: #3A424F; /* Slightly darker on hover */
+            box-shadow: 0 4px 10px rgba(0, 0, 0, 0.3), inset 0 2px 4px rgba(255, 255, 255, 0.15), inset 0 -2px 4px rgba(0, 0, 0, 0.25);
+            transform: translateY(-1px);
+        }
+
+        /* Container for icon and text within the button - general styling */
+        .button-content-wrapper {
+            display: flex;
+            align-items: center;
+            gap: 0.6rem; /* THIS IS THE LINE TO CHANGE FOR SPACING BETWEEN ICON AND TEXT */
+        }
+
+        /* Outer dark gray circle */
+        .button-icon-outer-circle {
+            width: 2.25rem; /* Size of the outer circle */
+            height: 2.25rem;
+            background-color: #3A424F; /* Darker grey for the filled circle */
+            border-radius: 50%;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            flex-shrink: 0; /* Prevent it from shrinking */
+            box-shadow: inset 0 0 5px rgba(0,0,0,0.3); /* Inner shadow for depth */
+        }
+
+        /* Inner yellow border circle */
+        .button-icon-inner-circle {
+            width: 1.25rem; /* Size of the inner circle */
+            height: 1.25rem;
+            border: 2px solid #FFD700; /* Gold/yellow border */
+            border-radius: 50%;
+            box-shadow: 0 0 5px rgba(255, 215, 0, 0.5); /* Subtle glow */
+        }
+
+        /* Text within the button */
+        .button-text {
+            /* No direct margin-left here, controlled by parent's gap */
+            text-align: center; /* Center the text within its available space */
+        }
+
+
+        .btn-secondary {
+            background-color: #e0e0e0;
+            color: #333;
+            border: 1px solid #ccc;
+            box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1);
+        }
+        .btn-secondary:hover {
+            background-color: #d0d0d0;
+            box-shadow: 0 2px 5px rgba(0, 0, 0, 0.15);
+            transform: translateY(-1px);
+        }
+
+        input[type="text"], textarea {
+            background-color: #f0f0f0;
+            border: 1px solid #ccc;
+            color: #333;
+            border-radius: 0.5rem;
+            padding: 0.75rem;
+            width: 100%;
+            transition: border-color 0.2s, box-shadow 0.2s;
+        }
+        input[type="text"]:focus, textarea:focus {
+            outline: none;
+            border-color: #FFD700; /* Changed to gold/yellow */
+            box-shadow: 0 0 0 2px rgba(255, 215, 0, 0.4); /* Gold/yellow glow */
+        }
+
+        .chat-message {
+            padding: 0.75rem 1rem;
+            border-radius: 0.75rem;
+            margin-bottom: 0.6rem;
+            max-width: 80%;
+            word-wrap: break-word;
+            box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1);
+            position: relative; /* For thinking dots */
+        }
+        .chat-message.user {
+            background-color: #e0e0e0;
+            color: #333;
+            align-self: flex-end;
+            margin-left: auto;
+            border-bottom-right-radius: 0; /* Tail of the bubble */
+        }
+        .chat-message.bot {
+            background-color: #ffffff;
+            color: #333;
+            align-self: flex-start;
+            margin-right: auto;
+            border: 1px solid #eee;
+            border-bottom-left-radius: 0; /* Tail of the bubble */
+        }
+        /* Styles for Markdown rendering */
+        .chat-message.bot p { margin-bottom: 0.6em; }
+        .chat-message.bot ul, .chat-message.bot ol { margin-left: 1.6em; margin-bottom: 0.6em; list-style-type: disc; }
+        .chat-message.bot ol { list-style-type: decimal; }
+        .chat-message.bot h1, .chat-message.bot h2, .chat-message.bot h3 { font-weight: bold; margin-top: 1em; margin-bottom: 0.5em; color: #a84c4c; }
+        /* Changed the color of links in bot messages to yellow */
+        .chat-message.bot a { color: #FFD700; text-decoration: underline; }
+
+        .loading-spinner {
+            border: 4px solid rgba(0,0,0,0.1);
+            border-top: 4px solid #454E5D; /* Changed to dark gray */
+            border-radius: 50%;
+            width: 24px;
+            height: 24px;
+            animation: spin 1s linear infinite;
+        }
+        @keyframes spin {
+            0% { transform: rotate(0deg); }
+            100% { transform: rotate(360deg); }
+        }
+
+        /* Thinking dots animation for bot messages */
+        .thinking-dots {
+            display: inline-block;
+            width: 1.5em; /* Space for dots */
+            text-align: left;
+            overflow: hidden;
+            vertical-align: bottom;
+        }
+
+        .thinking-dots::after {
+            content: '...';
+            animation: dots 1s steps(3, end) infinite;
+        }
+
+        @keyframes dots {
+            0% { content: ''; }
+            33% { content: '.'; }
+            66% { content: '..'; }
+            100% { content: '...'; }
+        }
+
+
+        /* Specific styles for the scraping controls */
+        #scrapeControlsContainer {
+            display: flex;
+            flex-direction: column;
+            gap: 0.75rem;
+        }
+        #scrapeControlsContainer .btn {
+            background-color: #f8f8f8;
+            color: #333;
+            border: 1px solid #e0e0e0;
+            box-shadow: none;
+            justify-content: center; /* Centered text */
+        }
+        #scrapeControlsContainer .btn:hover {
+            background-color: #efefef;
+            transform: none;
+            box-shadow: none;
+        }
+
+        /* Styles for search results */
+        .search-results-link {
+            /* Inherit color from parent, which is text-gray-500 from the outer div */
+            color: inherit;
+            text-decoration: underline;
+        }
+        .search-results-link:hover {
+            /* Keep underline on hover, maybe slightly darken color */
+            color: #4a4a4a; /* Slightly darker gray on hover */
+        }
+
+
+        /* Responsive adjustments */
+        @media (max-width: 768px) {
+            .container {
+                padding: 1rem;
+            }
+            .card {
+                padding: 1.25rem;
+            }
+            .grid.md:grid-cols-2 {
+                grid-template-columns: 1fr;
+            }
+            .flex-col.sm:flex-row {
+                flex-direction: column;
+            }
+            .btn {
+                width: 100%;
+                /* Adjust padding for full-width buttons on small screens, ensuring icon is visible */
+                padding-left: 0.75rem;
+                padding-right: 0.75rem;
+                justify-content: center; /* Center content when full width */
+            }
+            /* Ensure specific margins are reset or adjusted for full-width on small screens */
+            /* These empty rulesets have been removed as they were causing the warnings. */
+            /* The centering is now handled by the .button-content-wrapper's justify-content: center. */
+            .top-bar {
+                flex-direction: column;
+                padding: 0.75rem 1rem;
+            }
+            .top-bar .logo {
+                margin-right: 0;
+                margin-bottom: 0.5rem;
+            }
+            .top-bar h1 {
+                margin-left: 0;
+                text-align: center;
+            }
+        }
+    </style>
+</head>
+<body>
+    <!-- Top Navigation Bar -->
+    <header class="top-bar">
+        <!-- Genshin Impact Logo with the requested link -->
+        <img src="https://www.pngmart.com/files/23/Genshin-Impact-Logo-PNG-Transparent.png" alt="Genshin Impact Logo" class="logo">
+        <h1 class="text-2xl text-white">Lore Database</h1>
+    </header>
+
+    <div class="container">
+        <!-- Lore Search Section -->
+        <div class="card">
+            <h2 class="text-2xl font-semibold mb-4 text-gray-700">Lore Search</h2>
+            <div class="flex flex-col sm:flex-row gap-4 mb-4">
+                <input type="text" id="queryInput" placeholder="Ask about Genshin Impact lore..." class="flex-grow">
+                <button id="searchButton" class="btn btn-primary md:w-48">
+                    <div class="button-content-wrapper justify-center"> <!-- Added justify-center here -->
+                        <div class="button-icon-outer-circle">
+                            <div class="button-icon-inner-circle"></div>
+                        </div>
+                        <span class="button-text">Search Lore</span>
+                    </div>
+                </button>
+            </div>
+            <div id="searchResults" class="space-y-4">
+                <!-- Search results will be displayed here -->
+            </div>
+        </div>
+
+        <!-- Scraping Controls & Stats Section -->
+        <div class="card">
+            <h2 class="text-2xl font-semibold mb-4 text-gray-700">Scraping Controls & Stats</h2>
+            <div class="grid grid-cols-1 md:grid-cols-2 gap-4 mb-4">
+                <div id="scrapeControlsContainer">
+                    <button id="runWikiScrapeButton" class="btn">Run Wiki Scrape Now</button>
+                    <button id="runRedditScrapeButton" class="btn">Run Reddit Scrape Now</button>
+                    <button id="runYoutubeScrapeButton" class="btn">Run YouTube Scrape Now</button>
+                    <button id="startSchedulerButton" class="btn btn-secondary">Start Scheduler</button>
+                    <button id="stopSchedulerButton" class="btn btn-secondary">Stop Scheduler</button>
+                    <button id="rescheduleAllButton" class="btn btn-secondary">Reschedule All</button>
+                </div>
+                <div id="statsDisplay" class="bg-gray-100 p-4 rounded-lg border border-gray-200">
+                    <h3 class="text-xl font-medium mb-2 text-gray-700">Database Statistics:</h3>
+                    <p class="text-gray-600">Total Entries: <span id="totalEntries">0</span></p>
+                    <p class="text-gray-600">Total Chunks: <span id="totalChunks">0</span></p>
+                    <div id="sourceDetails" class="mt-2 text-gray-600">
+                        <!-- Source details will be loaded here -->
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Gemini Chat Section -->
+        <div class="card">
+            <h2 class="text-2xl font-semibold mb-4 text-gray-700">Ask About Teyvat</h2> <!-- Updated title -->
+            <div id="chatHistory" class="bg-gray-100 p-4 rounded-lg h-96 overflow-y-auto flex flex-col space-y-4 mb-4 border border-gray-200">
+                <!-- Chat messages will appear here -->
+            </div>
+            <div class="flex flex-col sm:flex-row gap-4">
+                <input type="text" id="chatInput" placeholder="Ask about Teyvat lore..." class="flex-grow">
+                <button id="sendMessageButton" class="btn btn-primary flex items-center justify-center">
+                    <div class="button-content-wrapper justify-center"> <!-- Added justify-center here -->
+                        <div class="button-icon-outer-circle">
+                            <div class="button-icon-inner-circle"></div>
+                        </div>
+                        <span class="button-text">Send Message</span>
+                        <div id="chatLoadingSpinner" class="loading-spinner ml-2 hidden"></div>
+                    </div>
+                </button>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        document.addEventListener('DOMContentLoaded', () => {
+            const queryInput = document.getElementById('queryInput');
+            const searchButton = document.getElementById('searchButton');
+            const searchResults = document.getElementById('searchResults');
+
+            const runWikiScrapeButton = document.getElementById('runWikiScrapeButton');
+            const runRedditScrapeButton = document.getElementById('runRedditScrapeButton');
+            const runYoutubeScrapeButton = document.getElementById('runYoutubeScrapeButton');
+            const startSchedulerButton = document.getElementById('startSchedulerButton');
+            const stopSchedulerButton = document.getElementById('stopSchedulerButton');
+            const rescheduleAllButton = document.getElementById('rescheduleAllButton');
+            const totalEntriesSpan = document.getElementById('totalEntries');
+            const totalChunksSpan = document.getElementById('totalChunks');
+            const sourceDetailsDiv = document.getElementById('sourceDetails');
+
+            const chatInput = document.getElementById('chatInput');
+            const sendMessageButton = document.getElementById('sendMessageButton');
+            const chatHistory = document.getElementById('chatHistory');
+            const chatLoadingSpinner = document.getElementById('chatLoadingSpinner');
+            // sendButtonText is no longer directly used for text, but for loading state it's fine.
+            // If you want to control the text span, you'd target it specifically within the button-content-wrapper.
+            const sendButtonText = sendMessageButton.querySelector('.button-text');
+
+
+            // --- Helper Functions ---
+
+            function showLoading(element, text = 'Processing...') {
+                // Store original content to restore it later
+                element._originalInnerHTML = element.innerHTML;
+                element._originalDisabled = element.disabled;
+
+                // For buttons with button-content-wrapper, we need to hide the wrapper and show spinner directly
+                const buttonContentWrapper = element.querySelector('.button-content-wrapper');
+                if (buttonContentWrapper) {
+                    buttonContentWrapper.classList.add('hidden');
+                }
+
+                // Create and append the loading spinner if it doesn't exist or is hidden
+                let spinnerContainer = element.querySelector('.loading-state-container');
+                if (!spinnerContainer) {
+                    spinnerContainer = document.createElement('div');
+                    spinnerContainer.classList.add('loading-state-container', 'flex', 'items-center', 'justify-center', 'w-full');
+                    spinnerContainer.innerHTML = `<div class="loading-spinner"></div> <span class="ml-2">${text}</span>`;
+                    element.appendChild(spinnerContainer);
+                } else {
+                    spinnerContainer.innerHTML = `<div class="loading-spinner"></div> <span class="ml-2">${text}</span>`;
+                    spinnerContainer.classList.remove('hidden');
+                }
+                element.disabled = true;
+            }
+
+            function hideLoading(element) {
+                // Restore original content and state
+                const buttonContentWrapper = element.querySelector('.button-content-wrapper');
+                if (buttonContentWrapper) {
+                    buttonContentWrapper.classList.remove('hidden');
+                }
+
+                const spinnerContainer = element.querySelector('.loading-state-container');
+                if (spinnerContainer) {
+                    spinnerContainer.classList.add('hidden');
+                }
+
+                if (element._originalDisabled !== undefined) {
+                    element.disabled = element._originalDisabled;
+                }
+            }
+
+
+            function addChatMessage(message, sender, isThinking = false) {
+                const messageDiv = document.createElement('div');
+                messageDiv.classList.add('chat-message', sender);
+
+                if (sender === 'bot') {
+                    if (isThinking) {
+                        messageDiv.innerHTML = `Thinking<span class="thinking-dots"></span>`;
+                    } else {
+                        messageDiv.innerHTML = marked.parse(message);
+                    }
+                } else {
+                    messageDiv.textContent = message;
+                }
+                chatHistory.appendChild(messageDiv);
+                chatHistory.scrollTop = chatHistory.scrollHeight; // Scroll to bottom
+                return messageDiv; // Return the messageDiv for potential updates (like thinking)
+            }
+
+            // --- API Calls ---
+
+            async function fetchStats() {
+                try {
+                    const response = await fetch('/stats'); // Relative URL
+                    if (!response.ok) {
+                        throw new Error(`HTTP error! status: ${response.status}`);
+                    }
+                    const data = await response.json();
+                    totalEntriesSpan.textContent = data.total_entries;
+                    totalChunksSpan.textContent = data.total_chunks;
+                    sourceDetailsDiv.innerHTML = '';
+                    data.source_details.forEach(source => {
+                        const p = document.createElement('p');
+                        p.textContent = `${source.source_type}: Entries - ${new Date(source.last_scraped).toLocaleString()}, Next Scrape - ${new Date(source.next_scrape).toLocaleString()}`;
+                        sourceDetailsDiv.appendChild(p);
+                    });
+                } catch (error) {
+                    console.error('Error fetching stats:', error);
+                    let errorMessage = 'Failed to fetch statistics. Check console for details.';
+                    if (error.detail) {
+                        errorMessage = `Error: ${error.detail}`;
+                    } else if (error.message) {
+                        errorMessage = `Error: ${error.message}`;
+                    }
+                    displayMessageBox('Error', errorMessage);
+                }
+            }
+
+            async function handleScrapeAction(action, source_type = null, event) {
+                const button = event.target;
+                showLoading(button, 'Processing...');
+                try {
+                    const response = await fetch('/scrape', { // Relative URL
+                        method: 'POST',
+                        headers: {
+                            'Content-Type': 'application/json',
+                            // Removed X-API-Key header as it's not needed on the frontend anymore
+                        },
+                        body: JSON.stringify({ action, source_type }),
+                    });
+                    if (!response.ok) {
+                        const errorData = await response.json();
+                        throw new Error(errorData.detail || `HTTP error! status: ${response.status}`);
+                    }
+                    const data = await response.json();
+                    displayMessageBox('Success', data.message); // Using custom message box
+                    fetchStats(); // Refresh stats after scrape action
+                } catch (error) {
+                    console.error('Error during scrape action:', error);
+                    let errorMessage = `Failed to perform action.`;
+                    if (error.detail) {
+                        errorMessage = `Failed to perform action: ${error.detail}`;
+                    } else if (error.message) {
+                        errorMessage = `Failed to perform action: ${error.message}`;
+                    }
+                    displayMessageBox('Error', errorMessage); // Using custom message box
+                } finally {
+                    hideLoading(button);
+                }
+            }
+
+            async function handleSearch() {
+                const query = queryInput.value.trim();
+                if (!query) return;
+
+                showLoading(searchButton, 'Searching...');
+                searchResults.innerHTML = '<p class="text-center text-gray-400">Searching...</p>';
+
+                try {
+                    const response = await fetch('/query', { // Relative URL
+                        method: 'POST',
+                        headers: {
+                            'Content-Type': 'application/json',
+                        },
+                        body: JSON.stringify({ query: query, k: 5 }),
+                    });
+                    if (!response.ok) {
+                        const errorData = await response.json();
+                        throw new Error(errorData.detail || `HTTP error! status: ${response.status}`);
+                    }
+                    const data = await response.json();
+                    searchResults.innerHTML = ''; // Clear previous results
+                    if (data.results.length === 0) {
+                        searchResults.innerHTML = '<p class="text-center text-gray-400">No relevant lore found.</p>';
+                    } else {
+                        data.results.forEach(entry => {
+                            const entryDiv = document.createElement('div');
+                            entryDiv.classList.add('bg-gray-100', 'p-4', 'rounded-lg', 'border', 'border-gray-200');
+                            entryDiv.innerHTML = `
+                                <h3 class="text-xl font-semibold text-gray-460">${entry.title}</h3>
+                                <p class="text-sm text-gray-500">Source: ${entry.source_type} - <a href="${entry.source_url}" target="_blank" class="search-results-link">Link</a></p>
+                                <p class="mt-2 text-gray-700">${entry.content.substring(0, 500)}...</p>
+                            `;
+                            searchResults.appendChild(entryDiv);
+                        });
+                    }
+                } catch (error) {
+                    console.error('Error during search:', error);
+                    let errorMessage = `Error during search.`;
+                    if (error.detail) {
+                        errorMessage = `Error during search: ${error.detail}`;
+                    } else if (error.message) {
+                        errorMessage = `Error during search: ${error.message}`;
+                    }
+                    searchResults.innerHTML = `<p class="text-center text-red-500">${errorMessage}</p>`;
+                } finally {
+                    hideLoading(searchButton);
+                }
+            }
+
+            async function handleChat() {
+                const message = chatInput.value.trim();
+                if (!message) return;
+
+                addChatMessage(message, 'user');
+                chatInput.value = ''; // Clear input
+
+                // Add a "thinking" message for the bot
+                const thinkingMessageDiv = addChatMessage('', 'bot', true);
+
+                // Use the showLoading function for the send message button
+                showLoading(sendMessageButton, 'Sending...');
+
+                try {
+                    const response = await fetch('/chat', { // Relative URL
+                        method: 'POST',
+                        headers: {
+                            'Content-Type': 'application/json',
+                        },
+                        body: JSON.stringify({ query: message }), // Changed 'message' to 'query' to match backend
+                    });
+
+                    if (!response.ok) {
+                        const errorData = await response.json();
+                        throw new Error(errorData.detail || `HTTP error! status: ${response.status}`);
+                    }
+
+                    const data = await response.json();
+                    // Replace the thinking message with the actual response
+                    thinkingMessageDiv.innerHTML = marked.parse(data.response);
+
+                    if (data.source_lore && data.source_lore.length > 0) {
+                        let sourceHtml = '<div class="mt-2 text-sm text-gray-600">Sources used:<ul>'; // Changed to text-gray-600
+                        data.source_lore.forEach(source => {
+                            sourceHtml += `<li><a href="${source.source_url}" target="_blank" class="text-yellow-500 hover:text-yellow-600 hover:underline">${source.title} (${source.source_type})</a></li>`;
+                        });
+                        sourceHtml += '</ul></div>';
+                        const sourceDiv = document.createElement('div');
+                        sourceDiv.innerHTML = sourceHtml;
+                        chatHistory.appendChild(sourceDiv);
+                        chatHistory.scrollTop = chatHistory.scrollHeight;
+                    }
+
+                } catch (error) {
+                    console.error('Error during chat:', error);
+                    let errorMessage = `Error during chat.`;
+                    if (error.detail) {
+                        errorMessage = `Error during chat: ${error.detail}`;
+                    } else if (error.message) {
+                        errorMessage = `Error during chat: ${error.message}`;
+                    }
+                    thinkingMessageDiv.innerHTML = `Error: ${errorMessage}`; // Update thinking message with error
+                } finally {
+                    hideLoading(sendMessageButton);
+                }
+            }
+
+            // --- Custom Message Box (Replaces alert()) ---
+            function displayMessageBox(title, message) {
+                const messageBox = document.createElement('div');
+                messageBox.classList.add('fixed', 'inset-0', 'bg-black', 'bg-opacity-50', 'flex', 'items-center', 'justify-center', 'z-50', 'p-4');
+                messageBox.innerHTML = `
+                    <div class="bg-white p-6 rounded-lg shadow-xl max-w-sm w-full text-center border border-red-400">
+                        <h3 class="text-xl font-bold mb-4 text-gray-800">${title}</h3>
+                        <p class="text-gray-700 mb-6">${message}</p>
+                        <button id="messageBoxClose" class="btn btn-primary w-full flex items-center justify-center">
+                            <div class="button-content-wrapper justify-center"> <!-- Added justify-center here -->
+                                <div class="button-icon-outer-circle">
+                                    <div class="button-icon-inner-circle"></div>
+                                </div>
+                                <span class="button-text">OK</span>
+                            </div>
+                        </button>
+                    </div>
+                `;
+                document.body.appendChild(messageBox);
+
+                document.getElementById('messageBoxClose').addEventListener('click', () => {
+                    document.body.removeChild(messageBox);
+                });
+            }
+
+
+            // --- Event Listeners ---
+            searchButton.addEventListener('click', handleSearch);
+            queryInput.addEventListener('keypress', (e) => {
+                if (e.key === 'Enter') {
+                    handleSearch();
+                }
+            });
+
+            runWikiScrapeButton.addEventListener('click', (event) => handleScrapeAction('run_now', 'wiki', event));
+            runRedditScrapeButton.addEventListener('click', (event) => handleScrapeAction('run_now', 'reddit', event));
+            runYoutubeScrapeButton.addEventListener('click', (event) => handleScrapeAction('run_now', 'youtube', event));
+            startSchedulerButton.addEventListener('click', (event) => handleScrapeAction('start', null, event));
+            stopSchedulerButton.addEventListener('click', (event) => handleScrapeAction('stop', null, event));
+            rescheduleAllButton.addEventListener('click', (event) => handleScrapeAction('reschedule', null, event));
+
+            sendMessageButton.addEventListener('click', handleChat);
+            chatInput.addEventListener('keypress', (e) => {
+                if (e.key === 'Enter') {
+                    handleChat();
+                }
+            });
+
+            // Initial fetch of stats when the page loads
+            fetchStats();
+        });
+    </script>
+</body>
+</html>
